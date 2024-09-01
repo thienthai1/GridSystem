@@ -84,11 +84,13 @@ void OnTick() {
         if (!buyLimitExists) {
             double takeProfit3 = buyLimitLevel + TakeProfit * Point;
             double stopLoss3 = 0;
-            int buyLimitTicket = OrderSend(Symbol(), OP_BUYLIMIT, LotSize, buyLimitLevel, 3, 
-                                           stopLoss3, takeProfit3, 
-                                           "Grid Buy Limit", 0, 0, Blue);
-            if (buyLimitTicket < 0) {
-                Print("Error creating Buy Limit order: ", GetLastError());
+            if(checkDistanceAvaialable(OP_BUYLIMIT)){
+                int buyLimitTicket = OrderSend(Symbol(), OP_BUYLIMIT, LotSize, buyLimitLevel, 3, 
+                                            stopLoss3, takeProfit3, 
+                                            "Grid Buy Limit", 0, 0, Blue);
+                if (buyLimitTicket < 0) {
+                    Print("Error creating Buy Limit order: ", GetLastError());
+                }
             }
         }
 
@@ -96,11 +98,13 @@ void OnTick() {
         if (!sellLimitExists) {
             double takeProfit4 = sellLimitLevel - TakeProfit * Point;
             double stopLoss4 = 0;
-            int sellLimitTicket = OrderSend(Symbol(), OP_SELLLIMIT, LotSize, sellLimitLevel, 3, 
-                                            stopLoss4, takeProfit4, 
-                                            "Grid Sell Limit", 0, 0, Red);
-            if (sellLimitTicket < 0) {
-                Print("Error creating Sell Limit order: ", GetLastError());
+            if(checkDistanceAvaialable(OP_SELLLIMIT)){
+                int sellLimitTicket = OrderSend(Symbol(), OP_SELLLIMIT, LotSize, sellLimitLevel, 3, 
+                                                stopLoss4, takeProfit4, 
+                                                "Grid Sell Limit", 0, 0, Red);
+                if (sellLimitTicket < 0) {
+                    Print("Error creating Sell Limit order: ", GetLastError());
+                }
             }
         }
 
@@ -169,13 +173,22 @@ void checkAndClosePositionsIfNoLoss() {
     }
 }
 
-// void checkDistanceAvaialable(double openPrice) {
+bool checkDistanceAvaialable(double openPrice) {
+
+    bool isAvailableDistance = true;
     
-//     for (int i = 0; i < OrdersTotal(); i++) {
-//         if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
-//             if (OrderType() == OP_SELL || OrderType() == OP_BUY) {
-//                 profit += OrderProfit();
-//             }
-//         }
-//     }
-// }
+    for (int i = 0; i < OrdersTotal(); i++) {
+        if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+            if (OrderType() == OP_SELL || OrderType() == OP_BUY) {
+                
+                Print((OrderOpenPrice() - openPrice) * Point);
+                if(MathAbs(currentPrice - OrderOpenPrice()) < GridSpacing * Point){
+                    isAvailableDistance = false;
+                }
+
+            }
+        }
+    }
+
+    return isAvailableDistance;
+}
